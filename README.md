@@ -11,20 +11,10 @@ A reusable multi-tenancy foundation for Laravel, built on top of [spatie/laravel
 
 ## Installation
 
-Require the package (via path repository or Composer):
+Require the package:
 
-```json
-{
-    "repositories": [
-        {
-            "type": "path",
-            "url": "packages/laravel-multitenancy-kit"
-        }
-    ],
-    "require": {
-        "vmeretail/laravel-multitenancy-kit": "*"
-    }
-}
+```bash
+composer require vmeretail/laravel-multitenancy-kit:^0.2
 ```
 
 The service providers are auto-discovered:
@@ -69,7 +59,77 @@ Key options in `config/multitenancy-kit.php`:
 
 The package uses a **split-database** architecture: landlord tables live in a central database, and each tenant gets its own database.
 
-Define both `tenant` and `landlord` connections explicitly in `config/database.php`. The tenant connection should start without a fixed database name because `SwitchTenantDatabaseTask` rewrites it to the current tenant database at runtime.
+Define both `tenant` and `landlord` connections explicitly in `config/database.php`. The package does not create a landlord connection at runtime.
+
+Set the application default connection to `tenant`:
+
+```php
+'default' => env('DB_CONNECTION', 'tenant'),
+```
+
+Add explicit tenant and landlord connections:
+
+```php
+'connections' => [
+    'tenant' => [
+        'driver' => env('TENANT_DB_DRIVER', 'pgsql'),
+        'host' => env('TENANT_DB_HOST', env('DB_HOST', '127.0.0.1')),
+        'port' => env('TENANT_DB_PORT', env('DB_PORT', '5432')),
+        'database' => env('TENANT_DB_DATABASE'),
+        'username' => env('TENANT_DB_USERNAME', env('DB_USERNAME', 'forge')),
+        'password' => env('TENANT_DB_PASSWORD', env('DB_PASSWORD', '')),
+        'charset' => env('TENANT_DB_CHARSET', 'utf8'),
+        'prefix' => '',
+        'prefix_indexes' => true,
+        'search_path' => env('TENANT_DB_SEARCH_PATH', 'public'),
+        'sslmode' => env('TENANT_DB_SSLMODE', 'prefer'),
+    ],
+
+    'landlord' => [
+        'driver' => env('LANDLORD_DB_DRIVER', env('TENANT_DB_DRIVER', 'pgsql')),
+        'host' => env('LANDLORD_DB_HOST', env('DB_HOST', '127.0.0.1')),
+        'port' => env('LANDLORD_DB_PORT', env('DB_PORT', '5432')),
+        'database' => env('LANDLORD_DB_DATABASE', env('DB_DATABASE')),
+        'username' => env('LANDLORD_DB_USERNAME', env('DB_USERNAME', 'forge')),
+        'password' => env('LANDLORD_DB_PASSWORD', env('DB_PASSWORD', '')),
+        'charset' => env('LANDLORD_DB_CHARSET', 'utf8'),
+        'prefix' => '',
+        'prefix_indexes' => true,
+        'search_path' => env('LANDLORD_DB_SEARCH_PATH', 'public'),
+        'sslmode' => env('LANDLORD_DB_SSLMODE', 'prefer'),
+    ],
+],
+```
+
+The tenant connection should start without a fixed database name in production because `SwitchTenantDatabaseTask` rewrites it to the current tenant database at runtime. The landlord connection should always point at the central database.
+
+Configure the connection names in `config/multitenancy-kit.php`:
+
+```php
+'tenant_database_connection_name' => 'tenant',
+'landlord_database_connection_name' => 'landlord',
+```
+
+For a typical production environment:
+
+```dotenv
+DB_CONNECTION=tenant
+
+LANDLORD_DB_DRIVER=pgsql
+LANDLORD_DB_HOST=central-db-host.example.com
+LANDLORD_DB_PORT=5432
+LANDLORD_DB_DATABASE=central_database
+LANDLORD_DB_USERNAME=app
+LANDLORD_DB_PASSWORD=secret
+
+TENANT_DB_DRIVER=pgsql
+TENANT_DB_HOST=tenant-db-host.example.com
+TENANT_DB_PORT=5432
+TENANT_DB_USERNAME=app
+TENANT_DB_PASSWORD=secret
+```
+
+Do not set `TENANT_DB_DATABASE` unless you are intentionally using a fixed tenant database, such as an in-memory SQLite database in tests.
 
 ### Migration layout
 
@@ -83,10 +143,12 @@ packages/
         landlord/        ← landlord migrations (users, tenants, impersonation_tokens)
 ```
 
-The package replaces Laravel's `migrate` command with `TenantAwareMigrateCommand`, which automatically routes to the correct migration path based on context:
+The package replaces Laravel's `migrate` command with `TenantAwareMigrateCommand`, which automatically routes to the correct migration path and database connection based on context:
 
-- **No tenant current** → runs landlord migrations only (from the package's `database/migrations/landlord/`)
-- **Tenant current** → runs tenant migrations only (from `database/migrations/`)
+- **No tenant current** -> runs landlord migrations on the configured landlord connection
+- **Tenant current** -> runs tenant migrations on the configured tenant connection
+
+The same context-aware connection selection applies to `db:seed` unless an explicit `--database` option is passed.
 
 ### Running landlord migrations
 
