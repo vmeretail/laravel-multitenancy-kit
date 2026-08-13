@@ -19,7 +19,7 @@ final readonly class RunTenantSeeders
 
         $tenant->execute(function () use ($seeder): void {
             Artisan::call('db:seed', [
-                '--database' => config('database.default'),
+                '--database' => config('multitenancy-kit.tenant_database_connection_name'),
                 '--class' => $seeder,
                 '--force' => true,
             ]);

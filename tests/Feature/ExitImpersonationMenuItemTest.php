@@ -128,13 +128,15 @@ final class ExitImpersonationMenuItemTest extends TestCase
     }
 
     /**
-     * Read the raw userMenuItems array from the panel to avoid triggering route resolution.
+     * Read the raw user menu registrations from the panel to avoid triggering route resolution.
      *
      * @return array<Action>
      */
     private function getRawUserMenuItems(Panel $panel): array
     {
-        return (new ReflectionProperty(Panel::class, 'userMenuItems'))->getValue($panel);
+        return collect((new ReflectionProperty(Panel::class, 'userMenuItemGroups'))->getValue($panel))
+            ->collapse()
+            ->all();
     }
 
     private function panelHasExitImpersonationItem(Panel $panel): bool

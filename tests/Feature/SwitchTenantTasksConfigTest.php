@@ -21,6 +21,19 @@ final class SwitchTenantTasksConfigTest extends TestCase
         ], config('multitenancy-kit.switch_tenant_tasks'));
     }
 
+    public function test_spatie_database_connections_are_loaded_from_kit_config(): void
+    {
+        config([
+            'multitenancy-kit.tenant_database_connection_name' => 'tenant',
+            'multitenancy-kit.landlord_database_connection_name' => 'landlord',
+        ]);
+
+        app()->getProvider(MultitenancyKitServiceProvider::class)->packageRegistered();
+
+        $this->assertSame('tenant', config('multitenancy.tenant_database_connection_name'));
+        $this->assertSame('landlord', config('multitenancy.landlord_database_connection_name'));
+    }
+
     public function test_spatie_switch_tenant_tasks_are_loaded_from_kit_config(): void
     {
         config([

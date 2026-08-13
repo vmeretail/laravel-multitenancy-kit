@@ -13,7 +13,7 @@ final readonly class RunTenantMigrations
     {
         $tenant->execute(function (): void {
             Artisan::call('migrate', [
-                '--database' => config('database.default'),
+                '--database' => config('multitenancy-kit.tenant_database_connection_name'),
                 '--force' => true,
             ]);
         });

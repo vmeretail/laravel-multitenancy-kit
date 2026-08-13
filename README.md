@@ -61,12 +61,15 @@ Key options in `config/multitenancy-kit.php`:
 | `auto_provision_database` | Auto-create DB on tenant creation | `true` |
 | `tenant_seeder` | Seeder class to run after tenant migration | `null` |
 | `tenant_migrations_path` | Path for tenant-specific migrations | `database/migrations/tenant` |
+| `tenant_database_connection_name` | Name of the tenant DB connection | `tenant` |
 | `landlord_database_connection_name` | Name of the landlord DB connection | `landlord` |
 | `switch_tenant_tasks` | Ordered Spatie switch tenant tasks | Prefix cache, switch database, switch storage prefix |
 
 ## Database & Migrations
 
 The package uses a **split-database** architecture: landlord tables live in a central database, and each tenant gets its own database.
+
+Define both `tenant` and `landlord` connections explicitly in `config/database.php`. The tenant connection should start without a fixed database name because `SwitchTenantDatabaseTask` rewrites it to the current tenant database at runtime.
 
 ### Migration layout
 
