@@ -1,0 +1,55 @@
+name: Lint
+
+on:
+  workflow_call:
+    outputs:
+      fixedFiles:
+        description: "If the code style was fixed"
+        value: ${{ jobs.lint.outputs.fixedFiles }}
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      fixedFiles: ${{ steps.commit.outputs.changes_detected }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.3
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: ./.github/actions/setup-php
+        with:
+          composer-auth: ${{ secrets.COMPOSER_AUTH }}
+
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
+
+      - name: Detect touched PHP and Blade files
+        id: php_files
+        uses: tj-actions/changed-files@v46
+        with:
+          files: |
+            **/*.php
+            **/*.blade.php
+
+      - name: Run Rector
+        if: steps.php_files.outputs.any_changed == 'true'
+        run: ./vendor/bin/rector ${{ steps.php_files.outputs.all_changed_files }}
+
+      - name: Run Pint
+        if: steps.php_files.outputs.any_changed == 'true'
+        run: ./vendor/bin/pint -p --diff=origin/${{ github.base_ref }}
+
+      - name: Commit linted files
+        uses: stefanzweifel/git-auto-commit-action@v5
+        id: commit
+        with:
+          commit_message: "Fixes coding style"

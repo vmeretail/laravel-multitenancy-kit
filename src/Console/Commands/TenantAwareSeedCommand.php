@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace VmeRetail\MultitenancyKit\Console\Commands;
 
-use Database\Seeders\DatabaseSeeder;
 use Illuminate\Database\Console\Seeds\SeedCommand;
 use Illuminate\Database\Seeder;
 use Spatie\Multitenancy\Contracts\IsTenant;
 
 final class TenantAwareSeedCommand extends SeedCommand
 {
+    private const string DATABASE_SEEDER = 'Database\\Seeders\\DatabaseSeeder';
+
     protected function getDatabase(): string
     {
         $database = $this->input->getOption('database');
@@ -34,7 +35,7 @@ final class TenantAwareSeedCommand extends SeedCommand
             $class = 'Database\\Seeders\\'.$class;
         }
 
-        if ($class === DatabaseSeeder::class && ! resolve(IsTenant::class)::checkCurrent()) {
+        if ($class === self::DATABASE_SEEDER && ! resolve(IsTenant::class)::checkCurrent()) {
             $landlordSeeder = config('multitenancy-kit.landlord_seeder');
 
             if ($landlordSeeder) {
@@ -42,7 +43,7 @@ final class TenantAwareSeedCommand extends SeedCommand
             }
         }
 
-        if ($class === DatabaseSeeder::class && ! class_exists($class)) {
+        if ($class === self::DATABASE_SEEDER && ! class_exists($class)) {
             $class = 'DatabaseSeeder';
         }
 

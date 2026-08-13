@@ -17,7 +17,7 @@ final readonly class SyncCentralUserToTenant
             $syncFields = config('multitenancy-kit.sync_fields');
 
             $attributes = collect($syncFields)
-                ->mapWithKeys(fn (string $field) => [$field => $centralUser->{$field}])
+                ->mapWithKeys(fn (string $field): array => [$field => $centralUser->{$field}])
                 ->put('central_user', true)
                 ->all();
 

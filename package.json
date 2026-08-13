@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.8.4",
+    "prettier-plugin-blade": "^3.2.2",
+    "prettier-plugin-tailwindcss": "^0.8.0"
+  }
+}

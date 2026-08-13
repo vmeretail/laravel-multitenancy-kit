@@ -91,9 +91,7 @@ if (! function_exists('tenant_default_scheme')) {
         $host = mb_strtolower($host);
 
         if (
-            $host === 'localhost'
-            || $host === '127.0.0.1'
-            || $host === '::1'
+            in_array($host, ['localhost', '127.0.0.1', '::1'], true)
             || str_ends_with($host, '.localhost')
             || str_ends_with($host, '.test')
         ) {

@@ -10,8 +10,12 @@
         "filament/filament": "^5.0"
     },
     "require-dev": {
+        "driftingly/rector-laravel": "^2.2",
+        "larastan/larastan": "^3.10",
+        "laravel/pint": "^1.30",
         "orchestra/testbench": "^11.0",
-        "phpunit/phpunit": "^12.0"
+        "phpunit/phpunit": "^12.0",
+        "rector/rector": "^2.3.9"
     },
     "autoload": {
         "psr-4": {
@@ -41,7 +45,23 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/phpunit"
+        "analyse": "./vendor/bin/phpstan analyse --memory-limit=2G",
+        "baseline": "./vendor/bin/phpstan analyse --generate-baseline --memory-limit=2G",
+        "lint": [
+            "./vendor/bin/pint -p",
+            "./vendor/bin/rector"
+        ],
+        "test": [
+            "@test:unit",
+            "@test:lint",
+            "@test:types"
+        ],
+        "test:lint": [
+            "./vendor/bin/pint -p --test",
+            "./vendor/bin/rector --dry-run"
+        ],
+        "test:types": "@analyse",
+        "test:unit": "vendor/bin/phpunit"
     },
     "minimum-stability": "stable",
     "prefer-stable": true

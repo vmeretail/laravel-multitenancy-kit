@@ -11,6 +11,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Multitenancy\Models\Concerns\UsesLandlordConnection;
 
+/**
+ * @property bool $is_admin
+ */
 final class CentralUser extends Authenticatable implements FilamentUser
 {
     use HasFactory;
