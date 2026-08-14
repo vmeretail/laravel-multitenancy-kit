@@ -1,0 +1,14 @@
+name: setup-node
+description: Setup Node.js and NPM
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 22
+        cache: npm
+
+    - name: Install NPM dependencies
+      run: npm ci
+      shell: bash

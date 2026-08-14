@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Multitenancy\Jobs\NotTenantAware;
 use VmeRetail\MultitenancyKit\Contracts\RegistersTenantSchedules;
+use VmeRetail\MultitenancyKit\Contracts\ResolvesTenantTimezone;
 use VmeRetail\MultitenancyKit\Enums\TenantScheduledRunStatus;
 use VmeRetail\MultitenancyKit\Jobs\RunTenantScheduledTask;
 use VmeRetail\MultitenancyKit\Models\Tenant;
@@ -253,7 +254,7 @@ final class TenantSchedulerTest extends TestCase
         ))->handle(
             app(TenantScheduleRegistry::class),
             app(ClaimTenantScheduledRun::class),
-            app(\VmeRetail\MultitenancyKit\Contracts\ResolvesTenantTimezone::class),
+            app(ResolvesTenantTimezone::class),
         );
 
         $this->assertTrue(FakeParameterizedTenantScheduleHandler::$lastFull);

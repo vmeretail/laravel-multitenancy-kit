@@ -6,13 +6,16 @@ namespace VmeRetail\MultitenancyKit\Filament\Resources;
 
 use BackedEnum;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use VmeRetail\MultitenancyKit\Filament\Resources\CentralUserResource\Pages;
+use VmeRetail\MultitenancyKit\Filament\Resources\CentralUserResource\Pages\CreateCentralUser;
+use VmeRetail\MultitenancyKit\Filament\Resources\CentralUserResource\Pages\EditCentralUser;
+use VmeRetail\MultitenancyKit\Filament\Resources\CentralUserResource\Pages\ListCentralUsers;
 use VmeRetail\MultitenancyKit\Models\CentralUser;
 
 final class CentralUserResource extends Resource
@@ -34,23 +37,23 @@ final class CentralUserResource extends Resource
     {
         return $schema
             ->schema([
-                Components\TextInput::make('name')
+                TextInput::make('name')
                     ->required()
                     ->maxLength(255),
 
-                Components\TextInput::make('email')
+                TextInput::make('email')
                     ->email()
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
 
-                Components\TextInput::make('password')
+                TextInput::make('password')
                     ->password()
                     ->required(fn (?CentralUser $record): bool => $record === null)
                     ->dehydrated(fn (?string $state): bool => filled($state))
                     ->maxLength(255),
 
-                Components\Toggle::make('is_admin')
+                Toggle::make('is_admin')
                     ->label('Administrator')
                     ->default(false),
             ]);
@@ -83,9 +86,9 @@ final class CentralUserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCentralUsers::route('/'),
-            'create' => Pages\CreateCentralUser::route('/create'),
-            'edit' => Pages\EditCentralUser::route('/{record}/edit'),
+            'index' => ListCentralUsers::route('/'),
+            'create' => CreateCentralUser::route('/create'),
+            'edit' => EditCentralUser::route('/{record}/edit'),
         ];
     }
 }

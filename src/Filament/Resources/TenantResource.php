@@ -8,7 +8,7 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -19,7 +19,9 @@ use VmeRetail\MultitenancyKit\Actions\CreateImpersonationToken;
 use VmeRetail\MultitenancyKit\Actions\RunTenantMigrations;
 use VmeRetail\MultitenancyKit\Actions\RunTenantSeeders;
 use VmeRetail\MultitenancyKit\Actions\SyncCentralUsersToTenant;
-use VmeRetail\MultitenancyKit\Filament\Resources\TenantResource\Pages;
+use VmeRetail\MultitenancyKit\Filament\Resources\TenantResource\Pages\CreateTenant;
+use VmeRetail\MultitenancyKit\Filament\Resources\TenantResource\Pages\EditTenant;
+use VmeRetail\MultitenancyKit\Filament\Resources\TenantResource\Pages\ListTenants;
 use VmeRetail\MultitenancyKit\Models\Tenant;
 
 final class TenantResource extends Resource
@@ -37,7 +39,7 @@ final class TenantResource extends Resource
     {
         return $schema
             ->schema([
-                Components\TextInput::make('name')
+                TextInput::make('name')
                     ->required()
                     ->maxLength(255)
                     ->live()
@@ -47,14 +49,14 @@ final class TenantResource extends Resource
                         $set('database', Tenant::generateDatabaseName(Str::slug($state ?? '', '_')));
                     }),
 
-                Components\TextInput::make('domain')
+                TextInput::make('domain')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255)
                     ->disabled(fn (?Tenant $record): bool => $record !== null)
                     ->dehydrated(),
 
-                Components\TextInput::make('database')
+                TextInput::make('database')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255)
@@ -144,9 +146,9 @@ final class TenantResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTenants::route('/'),
-            'create' => Pages\CreateTenant::route('/create'),
-            'edit' => Pages\EditTenant::route('/{record}/edit'),
+            'index' => ListTenants::route('/'),
+            'create' => CreateTenant::route('/create'),
+            'edit' => EditTenant::route('/{record}/edit'),
         ];
     }
 }

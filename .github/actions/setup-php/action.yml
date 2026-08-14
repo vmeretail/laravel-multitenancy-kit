@@ -1,0 +1,24 @@
+name: setup-php
+description: Setup PHP and Composer
+
+inputs:
+  composer-auth:
+    description: Composer authentication JSON used to install private packages
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "8.4"
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, intl, iconv
+        coverage: none
+        tools: composer:v2
+
+    - name: Install composer dependencies
+      uses: ramsey/composer-install@v3
+      env:
+        COMPOSER_AUTH: ${{ inputs.composer-auth }}

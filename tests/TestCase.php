@@ -20,4 +20,21 @@ abstract class TestCase extends OrchestraTestCase
             MultitenancyKitServiceProvider::class,
         ];
     }
+
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set('database.default', 'tenant');
+        $app['config']->set('database.connections.tenant', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ]);
+        $app['config']->set('database.connections.landlord', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ]);
+    }
 }

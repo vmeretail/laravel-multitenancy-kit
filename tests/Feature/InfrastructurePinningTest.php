@@ -26,6 +26,18 @@ final class InfrastructurePinningTest extends TestCase
         $this->assertSame($this->landlordConnection, config('session.connection'));
     }
 
+    public function test_landlord_connection_must_be_configured_explicitly(): void
+    {
+        config([
+            'database.default' => 'tenant',
+            'database.connections.landlord' => null,
+        ]);
+
+        $this->reRegisterProvider();
+
+        $this->assertNull(config('database.connections.landlord'));
+    }
+
     public function test_session_is_not_pinned_when_driver_is_not_database(): void
     {
         config(['session.driver' => 'array', 'session.connection' => null]);

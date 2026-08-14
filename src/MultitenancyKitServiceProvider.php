@@ -44,7 +44,6 @@ final class MultitenancyKitServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
-        $this->createLandlordConnection();
         $this->mergeAuthConfig();
         $this->mergeSpatieConfig();
         $this->pinSessionToLandlord();
@@ -65,8 +64,8 @@ final class MultitenancyKitServiceProvider extends PackageServiceProvider
 
         Event::listen(TenantCreated::class, ProvisionTenantListener::class);
 
-        $this->app->extend(MigrateCommand::class, fn ($command, $app) => new TenantAwareMigrateCommand($app[Migrator::class], $app[Dispatcher::class]));
-        $this->app->extend(SeedCommand::class, fn ($command, $app) => new TenantAwareSeedCommand($app[ConnectionResolverInterface::class]));
+        $this->app->extend(MigrateCommand::class, fn ($command, $app): TenantAwareMigrateCommand => new TenantAwareMigrateCommand($app[Migrator::class], $app[Dispatcher::class]));
+        $this->app->extend(SeedCommand::class, fn ($command, $app): TenantAwareSeedCommand => new TenantAwareSeedCommand($app[ConnectionResolverInterface::class]));
 
         $this->app->make(RegisterConfiguredTenantSchedules::class)->execute();
 
@@ -107,29 +106,11 @@ final class MultitenancyKitServiceProvider extends PackageServiceProvider
         }
     }
 
-    private function createLandlordConnection(): void
-    {
-        $landlordConnection = config('multitenancy-kit.landlord_database_connection_name');
-
-        if (config("database.connections.{$landlordConnection}")) {
-            return;
-        }
-
-        $defaultConnection = config('database.default');
-        $defaultConfig = config("database.connections.{$defaultConnection}");
-
-        config([
-            "database.connections.{$landlordConnection}" => $defaultConfig,
-        ]);
-    }
-
     /**
      * Pin the database session to the landlord connection.
      *
-     * Spatie's SwitchTenantDatabaseTask rewrites the default connection's
-     * database at runtime and sets it to null when forgetting a tenant.
-     * The landlord connection is a stable snapshot that is never modified,
-     * so sessions always reach the central database.
+     * The landlord connection is stable and never rewritten by Spatie's
+     * SwitchTenantDatabaseTask, so sessions always reach the central database.
      */
     private function pinSessionToLandlord(): void
     {
@@ -145,9 +126,8 @@ final class MultitenancyKitServiceProvider extends PackageServiceProvider
     /**
      * Pin the database cache store to the landlord connection.
      *
-     * Same rationale as pinSessionToLandlord — the default connection's
-     * database is rewritten by SwitchTenantDatabaseTask, so the cache
-     * store must use the stable landlord connection.
+     * Same rationale as pinSessionToLandlord: cache metadata belongs in the
+     * central database, not the current tenant database.
      */
     private function pinCacheToLandlord(): void
     {
@@ -167,9 +147,7 @@ final class MultitenancyKitServiceProvider extends PackageServiceProvider
      * Pin queue infrastructure to the landlord connection.
      *
      * The queue worker, batching table, and failed-jobs table all live
-     * in the central database. Without explicit pinning they fall back
-     * to the default connection which gets rewritten (or nulled) by
-     * SwitchTenantDatabaseTask.
+     * in the central database.
      */
     private function pinQueueToLandlord(): void
     {
@@ -190,12 +168,14 @@ final class MultitenancyKitServiceProvider extends PackageServiceProvider
     private function mergeSpatieConfig(): void
     {
         $tenantModel = config('multitenancy-kit.tenant_model');
+        $tenantConnection = config('multitenancy-kit.tenant_database_connection_name');
         $landlordConnection = config('multitenancy-kit.landlord_database_connection_name');
         $switchTenantTasks = config('multitenancy-kit.switch_tenant_tasks', []);
 
         config([
             'multitenancy.tenant_model' => $tenantModel,
             'multitenancy.tenant_finder' => DomainTenantFinder::class,
+            'multitenancy.tenant_database_connection_name' => $tenantConnection,
             'multitenancy.landlord_database_connection_name' => $landlordConnection,
             'multitenancy.switch_tenant_tasks' => $switchTenantTasks,
         ]);

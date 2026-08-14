@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+use Spatie\Multitenancy\Tasks\PrefixCacheTask;
+use Spatie\Multitenancy\Tasks\SwitchTenantDatabaseTask;
+use VmeRetail\MultitenancyKit\Database\Seeders\LandlordSeeder;
+use VmeRetail\MultitenancyKit\Models\CentralUser;
+use VmeRetail\MultitenancyKit\Models\Tenant;
+use VmeRetail\MultitenancyKit\Support\TenantScheduling\SystemTimezoneResolver;
+use VmeRetail\MultitenancyKit\Tasks\SwitchStoragePrefixTask;
+
 return [
 
     /*
@@ -21,9 +29,9 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'tenant_model' => VmeRetail\MultitenancyKit\Models\Tenant::class,
+    'tenant_model' => Tenant::class,
 
-    'central_user_model' => VmeRetail\MultitenancyKit\Models\CentralUser::class,
+    'central_user_model' => CentralUser::class,
 
     // The tenant-side User model. App must set this.
     'tenant_user_model' => null,
@@ -81,14 +89,14 @@ return [
 
     'auto_provision_database' => true,
 
-    'landlord_seeder' => VmeRetail\MultitenancyKit\Database\Seeders\LandlordSeeder::class,
+    'landlord_seeder' => LandlordSeeder::class,
 
     'tenant_seeder' => null,
 
     'tenant_migrations_path' => 'database/migrations/tenant',
 
     // Implementation of ResolvesTenantTimezone. Defaults to app.timezone.
-    'tenant_timezone_resolver' => VmeRetail\MultitenancyKit\Support\TenantScheduling\SystemTimezoneResolver::class,
+    'tenant_timezone_resolver' => SystemTimezoneResolver::class,
 
     // Optional implementation of RegistersTenantSchedules for app-owned schedule definitions.
     'tenant_schedule_registrar' => null,
@@ -106,12 +114,13 @@ return [
     | Database Connections
     |--------------------------------------------------------------------------
     |
-    | The app's default connection is used as the tenant connection — Spatie's
-    | SwitchTenantDatabaseTask rewrites its `database` at runtime. The package
-    | auto-creates a separate landlord connection (a snapshot of the original
-    | default) so landlord models always reach the central database.
+    | Define both connections explicitly in config/database.php. Spatie's
+    | SwitchTenantDatabaseTask rewrites the tenant connection's `database`
+    | at runtime, while landlord models always use the central connection.
     |
     */
+
+    'tenant_database_connection_name' => 'tenant',
 
     'landlord_database_connection_name' => 'landlord',
 
@@ -126,9 +135,9 @@ return [
     */
 
     'switch_tenant_tasks' => [
-        Spatie\Multitenancy\Tasks\PrefixCacheTask::class,
-        Spatie\Multitenancy\Tasks\SwitchTenantDatabaseTask::class,
-        VmeRetail\MultitenancyKit\Tasks\SwitchStoragePrefixTask::class,
+        PrefixCacheTask::class,
+        SwitchTenantDatabaseTask::class,
+        SwitchStoragePrefixTask::class,
     ],
 
     /*
