@@ -9,12 +9,12 @@ use VmeRetail\MultitenancyKit\Models\CentralUser;
 
 final readonly class SyncCentralUser
 {
-    public function execute(CentralUser $centralUser): void
+    public function execute(CentralUser $centralUser, ?string $previousEmail = null): void
     {
         $tenantModel = config('multitenancy-kit.tenant_model');
 
         foreach ($tenantModel::all() as $tenant) {
-            SyncCentralUserToTenantJob::dispatch($centralUser, $tenant);
+            SyncCentralUserToTenantJob::dispatch($centralUser, $tenant, $previousEmail);
         }
     }
 }
