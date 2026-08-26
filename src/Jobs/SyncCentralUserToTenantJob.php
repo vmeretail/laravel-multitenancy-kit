@@ -24,10 +24,11 @@ final class SyncCentralUserToTenantJob implements NotTenantAware, ShouldQueue
     public function __construct(
         private readonly CentralUser $centralUser,
         private readonly IsTenant $tenant,
+        private readonly ?string $previousEmail = null,
     ) {}
 
     public function handle(SyncCentralUserToTenant $action): void
     {
-        $action->execute($this->centralUser, $this->tenant);
+        $action->execute($this->centralUser, $this->tenant, $this->previousEmail);
     }
 }

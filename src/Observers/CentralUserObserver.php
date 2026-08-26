@@ -15,6 +15,11 @@ final readonly class CentralUserObserver
 
     public function saved(CentralUser $centralUser): void
     {
-        $this->syncCentralUser->execute($centralUser);
+        $originalEmail = $centralUser->getOriginal('email');
+        $previousEmail = $centralUser->wasChanged('email') && is_string($originalEmail)
+            ? $originalEmail
+            : null;
+
+        $this->syncCentralUser->execute($centralUser, $previousEmail);
     }
 }
